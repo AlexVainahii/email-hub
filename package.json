@@ -1,0 +1,69 @@
+{
+  "name": "emailhub",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=14.20.1"
+  },
+  "scripts": {
+    "test": "jest",
+    "start": "cross-env NODE_ENV=production node ./server.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon ./server.js",
+    "lint": "eslint **/*.js",
+    "lint:fix": "eslint --fix **/*.js"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "axios": "^1.4.0",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.40.0",
+    "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "gravatar": "^1.8.2",
+    "imap": "^0.8.19",
+    "jimp": "^0.22.10",
+    "joi": "^17.9.2",
+    "jsonwebtoken": "^9.0.1",
+    "module-alias": "^2.2.3",
+    "mongoose": "^7.4.4",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "node-imap": "^0.9.6",
+    "passport": "^0.6.0",
+    "passport-github": "^1.1.0",
+    "quoted-printable": "^1.0.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eslint": "7.19.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "16.0.3",
+    "eslint-plugin-import": "2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "5.2.0",
+    "nodemon": "^3.0.1"
+  },
+  "_moduleAliases": {
+    "@root": ".",
+    "@src": "./src",
+    "@controllers": "./src/controllers",
+    "@middlewares": "./src/middlewares",
+    "@routes": "./src/routes",
+    "@services": "./src/services",
+    "@models": "./src/models",
+    "@schemas": "./src/schemas",
+    "@helpers": "./src/helpers"
+  },
+  "description": "- `npm start` &mdash; старт сервера в режимі production\r - `npm run start:dev` &mdash; старт сервера в режимі розробки (development)\r - `npm run lint` &mdash; запустити виконання перевірки коду з eslint, необхідно виконувати перед кожним PR та виправляти всі помилки лінтера\r - `npm lint:fix` &mdash; та ж перевірка лінтера, але з автоматичними виправленнями простих помилок",
+  "main": ".eslintrc.js",
+  "author": "",
+  "license": "ISC"
+}
