@@ -17,10 +17,10 @@ class EmailService {
             if (err) return reject(err);
             countPage = Math.floor(uids.length / countMailForPage);
             console.log("countPage :>> ", countPage);
-            const start = Math.max(0, uids.length - 50) + 1;
+            const start = Math.max(0, uids.length - 5);
             const end = uids.length;
 
-            const f = imap.seq.fetch(`${start}:${end}`, {
+            const f = imap.seq.fetch(`${end}:${start}`, {
               bodies: "HEADER.FIELDS (FROM TO SUBJECT DATE TEXT)",
 
               struct: true,
@@ -81,6 +81,4 @@ class EmailService {
     return { emailList, countPage };
   }
 }
-0.0;
-
 module.exports = new EmailService();

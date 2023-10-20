@@ -32,19 +32,6 @@ const getEmails = async (req, res) => {
       console.log(emailList);
       const message = emailList[0];
 
-      // Виводимо заголовок повідомлення
-      console.log("Заголовок:", message.headers.subject[0]);
-
-      // Виводимо відправника
-      console.log("Від:", message.headers.from[0]);
-
-      // Виводимо дату повідомлення
-      console.log("Дата:", message.headers.date[0]);
-
-      // Виводимо текст повідомлення
-      console.log("Текст повідомлення:");
-      console.log(message.attributes.struct[1][0]); // Перший текстовий варіант
-
       // Отримуємо інші дані про повідомлення, якщо потрібно
       const uid = message.attributes.uid;
       const messageId = message.attributes["x-gm-msgid"];
