@@ -67,14 +67,16 @@ class EmailService {
 
   async getEmailList(_id, boxName = false) {
     const user = await User.findById({ _id });
-    console.log("user :>> ", _id);
-    const imapEmail = await ImapEmail.findOne({ owner: user._id });
 
+    const listImap = await ImapEmail.find({ owner: user._id });
+    const imapEmail = boxName
+      ? listImap.find((item) => item.titleBox === boxName)
+      : listImap[0];
     const imapConfig = this.createImapConfig(imapEmail);
     const imap = new Imap(imapConfig);
     const emailList = [];
     let countPage = 0;
-    console.log("imapEmail :>> ", imapEmail);
+
     function openInbox(box, cb) {
       imap.openBox(`${box}`, true, cb);
     }
