@@ -5,7 +5,7 @@ const { schemas } = require("@schemas");
 const { emailsCtrl } = require("@controllers");
 
 const router = express.Router();
-
+router.get("/", middleW.authenticate, emailsCtrl.getAllBox);
 router.get("/getAll", middleW.authenticate, emailsCtrl.getEmails);
 router.get("/getBox", emailsCtrl.getEmailBox);
 router.post(

@@ -65,72 +65,73 @@ class EmailService {
     };
   }
 
-  openInbox(imap, box, cb) {
-    imap.openBox(`${box}`, true, cb);
-  }
-
-  async getEmailList(_id) {
+  async getEmailList(_id, boxName = false) {
     const user = await User.findById({ _id });
+    console.log("user :>> ", _id);
     const imapEmail = await ImapEmail.findOne({ owner: user._id });
-    const imapConfig = this.createImapConfig(imapEmail);
 
+    const imapConfig = this.createImapConfig(imapEmail);
     const imap = new Imap(imapConfig);
     const emailList = [];
     let countPage = 0;
+    console.log("imapEmail :>> ", imapEmail);
     function openInbox(box, cb) {
       imap.openBox(`${box}`, true, cb);
     }
     await new Promise((resolve, reject) => {
       imap.once("ready", function () {
-        openInbox(imapEmail.mailboxes[0].description, function (err, box) {
-          if (err) return reject(err);
-          imap.search(["ALL"], (err, uids) => {
+        openInbox(
+          boxName || imapEmail.mailboxes[0].description,
+          function (err, box) {
             if (err) return reject(err);
-            countPage = Math.floor(uids.length / user.itemPerPage);
+            imap.search(["ALL"], (err, uids) => {
+              if (err) return reject(err);
+              countPage = Math.floor(uids.length / user.itemPerPage);
 
-            const start =
-              uids.length - user.itemPerPage <= 0
-                ? 1
-                : uids.length - user.itemPerPage;
-            const end = uids.length;
-            const f = imap.seq.fetch(`${start}:${end}`, {
-              bodies: "HEADER.FIELDS (FROM TO SUBJECT DATE TEXT)",
+              const start =
+                uids.length - user.itemPerPage <= 0
+                  ? 1
+                  : uids.length - user.itemPerPage;
+              const end = uids.length;
+              const f = imap.seq.fetch(`${start}:${end}`, {
+                bodies: "HEADER.FIELDS (FROM TO SUBJECT DATE TEXT)",
 
-              struct: true,
-            });
+                struct: true,
+              });
 
-            f.on("message", function (msg, seqno) {
-              const emailData = {};
+              f.on("message", function (msg, seqno) {
+                const emailData = {};
 
-              msg.on("body", function (stream, info) {
-                let buffer = "";
-                stream.on("data", function (chunk) {
-                  buffer += chunk.toString("utf8");
+                msg.on("body", function (stream, info) {
+                  let buffer = "";
+                  stream.on("data", function (chunk) {
+                    buffer += chunk.toString("utf8");
+                  });
+                  stream.once("end", function () {
+                    const headers = Imap.parseHeader(buffer);
+                    emailData.headers = headers;
+                  });
                 });
-                stream.once("end", function () {
-                  const headers = Imap.parseHeader(buffer);
-                  emailData.headers = headers;
+
+                msg.once("attributes", function (attrs) {
+                  emailData.attributes = attrs;
+                });
+
+                msg.once("end", function () {
+                  emailList.push(emailData);
                 });
               });
 
-              msg.once("attributes", function (attrs) {
-                emailData.attributes = attrs;
+              f.once("error", function (err) {
+                reject(err);
               });
 
-              msg.once("end", function () {
-                emailList.push(emailData);
+              f.once("end", function () {
+                resolve();
               });
             });
-
-            f.once("error", function (err) {
-              reject(err);
-            });
-
-            f.once("end", function () {
-              resolve();
-            });
-          });
-        });
+          }
+        );
       });
 
       imap.once("error", function (err) {
@@ -144,7 +145,7 @@ class EmailService {
       imap.connect();
     });
 
-    return { emailList, countPage };
+    return { emailList, countPage, listBox: imapEmail.mailboxes, boxName };
   }
 
   getBox(obj) {
@@ -207,6 +208,10 @@ class EmailService {
 
       imap.connect();
     });
+  }
+
+  async allMailBox(_id) {
+    return await this.getEmailList(_id);
   }
 }
 module.exports = new EmailService();
