@@ -147,7 +147,7 @@ class EmailService {
       imap.connect();
     });
 
-    return { emailList, countPage, listBox: imapEmail.mailboxes, boxName };
+    return { emailList, countPage, listImap, boxName };
   }
 
   getBox(obj) {
