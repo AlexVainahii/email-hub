@@ -32,7 +32,11 @@ const userSchema = new Schema(
     token: { type: String, default: null },
 
     avatarURL: { type: String, default: "" },
-
+    itemPerPage: {
+      type: Number,
+      default: 10,
+      enum: helpers.itemsPerPageEnum, // Використовуємо перелік для допустимих значень
+    },
     verify: {
       type: Boolean,
       default: false,

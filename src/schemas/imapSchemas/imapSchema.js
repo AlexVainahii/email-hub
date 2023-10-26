@@ -1,0 +1,34 @@
+const Joi = require("joi");
+const { emailRegexp } = require("@helpers");
+
+const imapSchema = Joi.object({
+  NumId: Joi.number().default(1),
+  titleBox: Joi.string().default("another mail"),
+  email: Joi.string()
+    .trim()
+    .pattern(emailRegexp)
+    .required()
+    .messages({ "any.required": "Email is required" }),
+  password: Joi.string().required().messages({
+    "any.required": "Password is required",
+  }),
+  port: Joi.number()
+    .required()
+    .messages({ "any.required": "Port is required" }),
+  host: Joi.string()
+    .required()
+    .messages({ "any.required": "Host is required" }),
+  tls: Joi.boolean().required().messages({ "any.required": "tls is required" }),
+  owner: Joi.string().messages({ "any.required": "Owner is required" }),
+  mailboxes: Joi.array()
+    .items(
+      Joi.object({
+        nameEn: Joi.string(),
+        nameUa: Joi.string(),
+        description: Joi.string(),
+      })
+    )
+    .default([]),
+});
+
+module.exports = { imapSchema };

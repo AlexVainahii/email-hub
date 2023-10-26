@@ -1,18 +1,25 @@
 const express = require("express");
 require("module-alias/register");
-// const middleW = require("@middlewares");
-// const { schemas } = require("@schemas");
+const middleW = require("@middlewares");
+const { schemas } = require("@schemas");
 const { emailsCtrl } = require("@controllers");
 
 const router = express.Router();
 
-router.get("/getAll", emailsCtrl.getEmails);
-
-// router.post(
-//   "/register",
-//   middleW.validateBody(schemas.registerSchema),
-//   usersCtrl.register
-// );
+router.get("/getAll", middleW.authenticate, emailsCtrl.getEmails);
+router.get("/getBox", emailsCtrl.getEmailBox);
+router.post(
+  "/addBox",
+  middleW.authenticate,
+  middleW.validateBody(schemas.imapSchema),
+  emailsCtrl.addBox
+);
+router.patch(
+  "/perPage",
+  middleW.authenticate,
+  middleW.validateBody(schemas.itemPerPageSchema),
+  emailsCtrl.patchPerPage
+);
 
 // router.post(
 //   "/login",

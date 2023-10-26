@@ -18,6 +18,7 @@ const getTasks = require("./getTasks");
 const generateRandomPassword = require("./generateRandomPassword");
 const { validateStartEndTime } = require("./validateTime");
 const { validateStartEndMonth } = require("./validateStartEndMonth");
+const itemsPerPageEnum = require("./itemsPerPageEnum");
 module.exports = {
   dateRegexp,
   emailRegexp,
@@ -37,4 +38,5 @@ module.exports = {
   validateStartEndTime,
   validateStartEndMonth,
   getTasks,
+  itemsPerPageEnum,
 };

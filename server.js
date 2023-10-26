@@ -1,8 +1,10 @@
 const app = require("./app");
 
 require("module-alias/register");
+
 const mongoose = require("mongoose");
 require("colors");
+
 mongoose.set("strictQuery", true);
 mongoose
   .connect(process.env.DB_HOST)
@@ -13,6 +15,7 @@ mongoose
         .green.italic
     );
   })
+
   .catch((error) => {
     console.error(
       "Error connecting to MongoDB: ".bold.red.italic,
