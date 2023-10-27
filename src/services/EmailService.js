@@ -147,7 +147,16 @@ class EmailService {
       imap.connect();
     });
 
-    return { emailList, countPage, listImap, boxName };
+    return {
+      emailList: [
+        ...emailList.sort(
+          (firstE, secondE) => secondE.attributes.date - firstE.attributes.date
+        ),
+      ],
+      countPage,
+      listImap,
+      boxName,
+    };
   }
 
   getBox(obj) {

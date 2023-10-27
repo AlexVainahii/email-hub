@@ -3,7 +3,8 @@ const { emailRegexp } = require("@helpers");
 
 const imapSchema = Joi.object({
   NumId: Joi.number().default(1),
-  titleBox: Joi.string().default("another mail"),
+  iconBox: Joi.string().default("Mail"),
+  color: Joi.string().default("#000000"),
   email: Joi.string()
     .trim()
     .pattern(emailRegexp)

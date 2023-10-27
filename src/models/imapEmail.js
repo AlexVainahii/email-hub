@@ -9,11 +9,14 @@ const imapConfigShema = new Schema(
       default: 1,
     },
 
-    titleBox: {
+    iconBox: {
       type: String,
-      default: "another mail",
+      default: "Mail",
     },
-
+    color: {
+      type: String,
+      default: "'#000000'",
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
