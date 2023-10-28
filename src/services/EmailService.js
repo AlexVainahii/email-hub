@@ -35,7 +35,6 @@ class EmailService {
     const imapEmail = await ImapEmail.findOne({ email });
     helpers.CheckByError(imapEmail, 409, "Provided email already exists");
     const encryptedPassword = this.encrypt(password); // Зашифруйте пароль перед збереженням
-    this.getBox({ user: email, password, port, host, tls });
     let listboxes = [];
     try {
       listboxes = await this.getBox({ user: email, password, port, host, tls });
@@ -76,14 +75,16 @@ class EmailService {
     const imap = new Imap(imapConfig);
     const emailList = [];
     let countPage = 0;
-
+    if (imapEmail.mailboxes.length === 0)
+      imapEmail.mailboxes.push(await this.getBox(imapConfig));
+    console.log("imapEmail :>> ", imapConfig);
     function openInbox(box, cb) {
       imap.openBox(`${box}`, true, cb);
     }
     await new Promise((resolve, reject) => {
       imap.once("ready", function () {
         openInbox(
-          boxName || imapEmail.mailboxes[0].description,
+          boxName || imapEmail.mailboxes.length || "INBOX",
           function (err, box) {
             if (err) return reject(err);
             imap.search(["ALL"], (err, uids) => {
@@ -170,40 +171,70 @@ class EmailService {
             reject(error);
           } else {
             const mailboxes = [];
-
-            const processMailboxTree = (mailboxTree, parentMailbox = "") => {
-              for (const name in mailboxTree) {
-                let nameEn, nameUa, description;
-                const mailbox = mailboxTree[name];
-
-                if (name === "INBOX") {
-                  nameEn = name;
-                  nameUa = "Вхідні";
-                  description = name;
-                  mailboxes.push({
-                    nameEn,
-                    nameUa,
-                    description,
-                  });
-                } else {
-                  for (const namech in mailbox.children) {
-                    const child = mailbox.children[namech];
-
-                    nameEn = child.special_use_attrib.substring(1);
-                    nameUa = namech;
-                    description = `${name}/${namech}`;
-                    const mailboxInfo = {
+            console.log("mailboxTree :>> ", mailboxTree);
+            const convertMaiLBox = (mailboxTree, host) => {
+              const processMailboxTree = (mailboxTree, parentMailbox = "") => {
+                for (const name in mailboxTree) {
+                  let nameEn, nameUa, description;
+                  const mailbox = mailboxTree[name];
+                  if (name === "INBOX") {
+                    nameEn = name;
+                    nameUa = "Вхідні";
+                    description = name;
+                    mailboxes.push({
                       nameEn,
                       nameUa,
                       description,
-                    };
-                    mailboxes.push(mailboxInfo);
+                    });
+                  } else {
+                    for (const namech in mailbox.children) {
+                      const child = mailbox.children[namech];
+
+                      nameEn = child.special_use_attrib.substring(1);
+                      nameUa = namech;
+                      description = `${name}/${namech}`;
+                      const mailboxInfo = {
+                        nameEn,
+                        nameUa,
+                        description,
+                      };
+                      mailboxes.push(mailboxInfo);
+                    }
                   }
                 }
+              };
+              const otherGmail = (mailboxTree) => {
+                function convertUa(name) {
+                  const translations = {
+                    Sent: "Відправлені",
+                    Drafts: "Чернетки",
+                    Spam: "Спам",
+                    Trash: "Смітник",
+                  };
+                  return translations[name] || name;
+                }
+
+                let nameEn, nameUa, description;
+                for (const name in mailboxTree) {
+                  nameEn = name;
+                  nameUa = convertUa(name);
+                  description = name;
+                  const mailboxInfo = {
+                    nameEn,
+                    nameUa,
+                    description,
+                  };
+                  mailboxes.push(mailboxInfo);
+                }
+              };
+
+              if (host === "imap.gmail.com") {
+                processMailboxTree(mailboxTree);
+              } else {
+                otherGmail(mailboxTree);
               }
             };
-
-            processMailboxTree(mailboxTree);
+            convertMaiLBox(mailboxTree, obj.host);
 
             imap.end();
 

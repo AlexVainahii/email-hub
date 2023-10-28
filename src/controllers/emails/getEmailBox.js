@@ -1,9 +1,9 @@
 const { EmailService } = require("@services");
 const getEmailBox = async (req, res) => {
   const imapConfig = {
-    user: "sanjaksms@gmail.com",
-    password: "tkzgzsufzflckgny",
-    host: "imap.gmail.com",
+    user: "vasilert@ukr.net",
+    password: "YHU1Iz2If0DVgoMt",
+    host: "imap.ukr.net",
     port: 993,
     tls: true,
   };

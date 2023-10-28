@@ -14,7 +14,13 @@ const app = express();
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 app.use(express.urlencoded({ extended: true }));
 app.use(logger(formatsLogger));
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Дозволити запити з цього домену
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Дозволені HTTP-методи
+    credentials: true, // Дозволити передавати кредити (наприклад, куки або токен)
+  })
+);
 app.use(express.json());
 app.use(express.static("public"));
 
