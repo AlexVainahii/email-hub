@@ -1,12 +1,12 @@
 const expressAsyncHandler = require("express-async-handler");
 
-const { getEmails } = require("./getEmails");
+const { getEmailsFromBox } = require("./getEmailsFromBox");
 const { getEmailBox } = require("./getEmailBox");
 const { addBoxImap } = require("./addBoxImap");
 const { patchPerPage } = require("./patchPerPage");
 const { getAllBox } = require("./getAllBox");
 module.exports = {
-  getEmails: expressAsyncHandler(getEmails),
+  getEmailsFromBox: expressAsyncHandler(getEmailsFromBox),
   getEmailBox: expressAsyncHandler(getEmailBox),
   addBoxImap: expressAsyncHandler(addBoxImap),
   patchPerPage: expressAsyncHandler(patchPerPage),

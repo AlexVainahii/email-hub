@@ -2,6 +2,7 @@ const CryptoJS = require("crypto-js");
 const helpers = require("@helpers");
 const { ImapEmail, User } = require("@models");
 const { ImapFlow } = require("imapflow");
+
 class EmailService {
   encrypt(password) {
     const encryptedPassword = CryptoJS.AES.encrypt(
@@ -45,6 +46,7 @@ class EmailService {
 
   convertUa(name) {
     const translations = {
+      INBOX: "Вхідні",
       Sent: "Відправлені",
       Drafts: "Чернетки",
       Spam: "Спам",
@@ -53,199 +55,11 @@ class EmailService {
     return translations[name] || name;
   }
 
-  // async getEmailList(_id, boxName = false) {
-  //   const user = await User.findById({ _id });
+  async getListFromBox(imapConfig, box, itemPerPage) {
+    const client = new ImapFlow(imapConfig);
 
-  //   const listImap = await ImapEmail.find({ owner: user._id });
-  //   console.log("listImap  :>> ", listImap);
-  //   const imapEmail = boxName
-  //     ? listImap.find((item) => item.titleBox === boxName)
-  //     : listImap[0];
-  //   console.log("imapEmail :>> ", imapEmail);
-  //   const imapConfig = this.createImapConfig(imapEmail);
-  //   const imap = new Imap(imapConfig);
-  //   const emailList = [];
-  //   let countPage = 0;
-  //   if (imapEmail.mailboxes.length === 0)
-  //     imapEmail.mailboxes.push(await this.getBox(imapConfig));
+    await client.connect();
 
-  //   function openInbox(box, cb) {
-  //     console.log("box :>> ", box);
-  //     imap.openBox("Sent", true, cb);
-  //   }
-  //   await new Promise((resolve, reject) => {
-  //     imap.once("ready", function () {
-  //       openInbox(
-  //         boxName || imapEmail.mailboxes[0].description || "INBOX",
-  //         function (err, box) {
-  //           if (err) return reject(err);
-  //           const f = imap.seq.fetch(`1:*`, {
-  //             bodies: "HEADER.FIELDS (FROM TO SUBJECT DATE TEXT)",
-
-  //             struct: true,
-  //           });
-  //           console.log("f :>> ", f);
-  //           imap.search(["UNSEEN"], (err, uids) => {
-  //             if (err) return reject(err);
-  //             console.log("hello :>> ", err);
-  //             countPage = Math.floor(uids.length / user.itemPerPage);
-
-  //             const start =
-  //               uids.length - user.itemPerPage <= 0
-  //                 ? 1
-  //                 : uids.length - user.itemPerPage;
-  //             const end = uids.length;
-  //             const f = imap.seq.fetch(`${start}:${end}`, {
-  //               bodies: "HEADER.FIELDS (FROM TO SUBJECT DATE TEXT)",
-
-  //               struct: true,
-  //             });
-
-  //             f.on("message", function (msg, seqno) {
-  //               const emailData = {};
-
-  //               msg.on("body", function (stream, info) {
-  //                 let buffer = "";
-  //                 stream.on("data", function (chunk) {
-  //                   buffer += chunk.toString("utf8");
-  //                 });
-  //                 stream.once("end", function () {
-  //                   const headers = Imap.parseHeader(buffer);
-  //                   emailData.headers = headers;
-  //                 });
-  //               });
-
-  //               msg.once("attributes", function (attrs) {
-  //                 emailData.attributes = attrs;
-  //               });
-
-  //               msg.once("end", function () {
-  //                 emailList.push(emailData);
-  //               });
-  //             });
-
-  //             f.once("error", function (err) {
-  //               reject(err);
-  //             });
-
-  //             f.once("end", function () {
-  //               resolve();
-  //             });
-  //           });
-  //         }
-  //       );
-  //     });
-
-  //     imap.once("error", function (err) {
-  //       reject(err);
-  //     });
-
-  //     imap.once("end", function () {
-  //       console.log("Connection ended");
-  //     });
-
-  //     imap.connect();
-  //   });
-
-  //   return {
-  //     emailList: [
-  //       ...emailList.sort(
-  //         (firstE, secondE) => secondE.attributes.date - firstE.attributes.date
-  //       ),
-  //     ],
-  //     countPage,
-  //     listImap,
-  //     boxName,
-  //   };
-  // }
-
-  // getBox(obj) {
-  //   console.log("obj :>> ", obj);
-  //   return new Promise((resolve, reject) => {
-  //     const imap = new Imap(obj);
-
-  //     imap.once("ready", () => {
-  //       imap.getBoxes((error, mailboxTree) => {
-  //         if (error) {
-  //           imap.end();
-  //           reject(error);
-  //         } else {
-  //           const mailboxes = [];
-  //           console.log("mailboxTree :>> ", mailboxTree);
-  //           const convertMaiLBox = (mailboxTree, host) => {
-  //             const processMailboxTree = (mailboxTree, parentMailbox = "") => {
-  //               for (const name in mailboxTree) {
-  //                 let nameEn, nameUa, description;
-  //                 const mailbox = mailboxTree[name];
-  //                 if (name === "INBOX") {
-  //                   nameEn = name;
-  //                   nameUa = "Вхідні";
-  //                   description = name;
-  //                   mailboxes.push({
-  //                     nameEn,
-  //                     nameUa,
-  //                     description,
-  //                   });
-  //                 } else {
-  //                   for (const namech in mailbox.children) {
-  //                     const child = mailbox.children[namech];
-
-  //                     nameEn = child.special_use_attrib.substring(1);
-  //                     nameUa = namech;
-  //                     description = `${name}/${namech}`;
-  //                     const mailboxInfo = {
-  //                       nameEn,
-  //                       nameUa,
-  //                       description,
-  //                     };
-  //                     mailboxes.push(mailboxInfo);
-  //                   }
-  //                 }
-  //               }
-  //             };
-  //             const otherGmail = (mailboxTree) => {
-  //
-
-  //               let nameEn, nameUa, description;
-  //               for (const name in mailboxTree) {
-  //                 nameEn = name;
-  //                 nameUa = convertUa(name);
-  //                 description = name;
-  //                 const mailboxInfo = {
-  //                   nameEn,
-  //                   nameUa,
-  //                   description,
-  //                 };
-  //                 mailboxes.push(mailboxInfo);
-  //               }
-  //             };
-
-  //             if (host === "imap.gmail.com") {
-  //               processMailboxTree(mailboxTree);
-  //             } else {
-  //               otherGmail(mailboxTree);
-  //             }
-  //           };
-  //           convertMaiLBox(mailboxTree, obj.host);
-
-  //           imap.end();
-
-  //           resolve(mailboxes);
-  //         }
-  //       });
-  //     });
-
-  //     imap.once("error", (error) => {
-  //       imap.end();
-  //       reject(error);
-  //     });
-
-  //     imap.connect();
-  //   });
-  // }
-
-  async getListFromBox(client, box, itemPerPage) {
-    console.log("updatedMailboxes :>> ", box);
     const lock = await client.getMailboxLock(box.path);
 
     const listMail = [];
@@ -267,6 +81,9 @@ class EmailService {
       // Make sure lock is released, otherwise next `getMailboxLock()` never returns
       lock.release();
     }
+
+    await client.logout();
+    await client.close();
     return listMail;
   }
 
@@ -291,12 +108,6 @@ class EmailService {
       true
     );
 
-    const listMail = await this.getListFromBox(
-      client,
-      listMailBox[0],
-      itemPerPage
-    );
-
     await client.logout();
     await client.close();
 
@@ -306,7 +117,6 @@ class EmailService {
           imapConfig.host === "imap.gmail.com"
             ? listMailBox.filter((box) => box.path !== "[Gmail]")
             : listMailBox,
-        listMail,
         isMailImap: true,
       };
     else
@@ -316,7 +126,6 @@ class EmailService {
           imapConfig.host === "imap.gmail.com"
             ? listMailBox.filter((box) => box.path !== "[Gmail]")
             : listMailBox,
-        listMail,
         isMailImap: true,
       };
   }
@@ -341,7 +150,7 @@ class EmailService {
       );
       helpers.CreateError(400, error);
     }
-    console.log("list :>> ", listboxes);
+
     const mailBoxImap = await ImapEmail.create({
       ...obj,
       pass: encryptedPassword,
@@ -353,26 +162,29 @@ class EmailService {
 
   async getCreateOrUpdateCountMail(
     client,
-    { mailboxes, host, _id },
+    { mailboxes, _id },
     isUpdate = false
   ) {
     const updatedMailboxes = mailboxes.map(async (mailbox) => {
-      const status = await client.status(mailbox.path, { messages: true });
+      const status = await client.status(mailbox.path, {
+        messages: true,
+        unseen: true,
+      });
+
       const updatedMailbox = isUpdate
         ? {
             ...mailbox.toObject(),
-            countMail: status.messages, // Оновлене значення countMail
+            countMail: status.messages,
+            countMailUnseen: status.unseen, // Оновлене значення countMail
           }
         : {
             nameEn:
               mailbox.specialUse?.slice(1) ||
               Array.from(mailbox.flags)[1].slice(1),
-            nameUa:
-              host === "imap.gmail.com"
-                ? mailbox.name
-                : this.convertUa(mailbox.name),
+            nameUa: this.convertUa(mailbox.name),
             path: mailbox.path,
             countMail: status.messages,
+            countMailUnseen: status.unseen,
           };
 
       return updatedMailbox;
@@ -393,49 +205,32 @@ class EmailService {
 
     const listMailBox = await this.getCreateOrUpdateCountMail(client, {
       mailboxes: list,
-      host: imapConfig.host,
     });
-
-    const listMail = await this.getListFromBox(
-      client,
-      listMailBox[0],
-      itemPerPage
-    );
 
     await client.logout();
     await client.close();
 
     return {
       listMailBox,
-      listMail,
     };
+  }
 
-    // try {
-    // fetch latest message source
-    // client.mailbox includes information about currently selected mailbox
-    // "exists" value is also the largest sequence number available in the mailbox
+  async getEmailList(_id, path) {
+    const imapModel = await ImapEmail.findById(_id);
 
-    // const message = await client.fetchOne(client.mailbox.exists, {
-    //   source: true,
-    // });
-    // console.log(message.source.toString());
+    const { itemPerPage } = await User.findById({ _id: imapModel.owner });
 
-    // list subjects for all messages
-    // uid value is always included in FETCH response, envelope strings are in unicode.
-    //   for await (const message of client.fetch("1", { envelope: true })) {
-    //     console.log(`${message.uid}: ${message.envelope.subject}`);
-    //     listMail.push({
-    //       id: message.uid,
-    //       tema: { ...message, modseq: Number(message.modseq) },
-    //     });
-    //     console.log(message);
-    //   }
-    // } finally {
-    //   // Make sure lock is released, otherwise next `getMailboxLock()` never returns
-    //   lock.release();
-    // }
+    console.log("itemPerPage :>> ", itemPerPage);
 
-    // log out and close connection
+    const box = imapModel.mailboxes.find((item) => item.path === path);
+
+    helpers.CheckByError(!imapModel, 404, "Imap settings not found");
+
+    const imapConfig = this.createImapConfig(imapModel);
+
+    const listEmail = await this.getListFromBox(imapConfig, box, itemPerPage);
+
+    return listEmail;
   }
 }
 module.exports = new EmailService();

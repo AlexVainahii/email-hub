@@ -1,13 +1,14 @@
 const { EmailService } = require("@services");
 
-const getEmails = async (req, res) => {
-  const { _id: owner } = req.user;
+const getEmailsFromBox = async (req, res) => {
+  const { _id, path } = req.query;
   console.log("343 :>> ");
-  EmailService.getEmailList(owner)
-    .then(({ emailList }) => {
+
+  EmailService.getEmailList(_id, path)
+    .then((listEmail) => {
       console.log("Список електронних листів:");
 
-      res.json({ data: emailList, status: 200 });
+      res.json({ data: listEmail, status: 200 });
     })
     .catch((error) => {
       console.error("Помилка при отриманні списку електронних листів:", error);
@@ -15,4 +16,4 @@ const getEmails = async (req, res) => {
     });
 };
 
-module.exports = { getEmails };
+module.exports = { getEmailsFromBox };

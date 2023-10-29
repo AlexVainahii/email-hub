@@ -29,7 +29,8 @@ const imapSchema = Joi.object({
         nameEn: Joi.string(),
         nameUa: Joi.string(),
         path: Joi.string(),
-        countNumber: Joi.number(),
+        countMail: Joi.number(),
+        countMailUnseen: Joi.number(),
       })
     )
     .default([]),
