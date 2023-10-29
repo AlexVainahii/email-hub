@@ -22,7 +22,7 @@ const imapConfigShema = new Schema(
       required: [true, "Email is required"],
       match: [helpers.emailRegexp, "Invalid email format."],
     },
-    password: {
+    pass: {
       type: String,
       required: [true, "Password is required"],
     },
@@ -36,7 +36,7 @@ const imapConfigShema = new Schema(
       type: String,
       required: [true, "Host is required"],
     },
-    tls: {
+    secure: {
       type: Boolean,
       required: [true, "tls is required"],
       default: true,
@@ -49,7 +49,8 @@ const imapConfigShema = new Schema(
       {
         nameEn: String,
         nameUa: String,
-        description: String,
+        path: String,
+        countMail: Number,
       },
     ],
   },

@@ -10,7 +10,7 @@ const imapSchema = Joi.object({
     .pattern(emailRegexp)
     .required()
     .messages({ "any.required": "Email is required" }),
-  password: Joi.string().required().messages({
+  pass: Joi.string().required().messages({
     "any.required": "Password is required",
   }),
   port: Joi.number()
@@ -19,14 +19,17 @@ const imapSchema = Joi.object({
   host: Joi.string()
     .required()
     .messages({ "any.required": "Host is required" }),
-  tls: Joi.boolean().required().messages({ "any.required": "tls is required" }),
+  secure: Joi.boolean()
+    .required()
+    .messages({ "any.required": "tls is required" }),
   owner: Joi.string().messages({ "any.required": "Owner is required" }),
   mailboxes: Joi.array()
     .items(
       Joi.object({
         nameEn: Joi.string(),
         nameUa: Joi.string(),
-        description: Joi.string(),
+        path: Joi.string(),
+        countNumber: Joi.number(),
       })
     )
     .default([]),
