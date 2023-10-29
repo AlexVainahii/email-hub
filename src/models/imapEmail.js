@@ -38,7 +38,7 @@ const imapConfigShema = new Schema(
     },
     secure: {
       type: Boolean,
-      required: [true, "tls is required"],
+      required: [true, "Secure is required"],
       default: true,
     },
     owner: {

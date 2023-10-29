@@ -245,6 +245,7 @@ class EmailService {
   // }
 
   async getListFromBox(client, box, itemPerPage) {
+    console.log("updatedMailboxes :>> ", box);
     const lock = await client.getMailboxLock(box.path);
 
     const listMail = [];
@@ -275,9 +276,8 @@ class EmailService {
       : await ImapEmail.find({ owner: _id });
 
     if (listImap.length === 0) return { listImap, isMailImap: false };
-    const imapEmail = listImap[0];
 
-    const { mailboxes } = imapEmail;
+    const imapEmail = listImap[0];
 
     const imapConfig = this.createImapConfig(imapEmail);
 
@@ -287,8 +287,7 @@ class EmailService {
 
     const listMailBox = await this.getCreateOrUpdateCountMail(
       client,
-      mailboxes,
-      imapConfig.host,
+      imapEmail,
       true
     );
 
@@ -328,6 +327,7 @@ class EmailService {
     helpers.CheckByError(imapEmail, 409, "Provided email already exists");
 
     const encryptedPassword = this.encrypt(pass);
+
     let listboxes = [];
     try {
       listboxes = await this.getMailBoxes(
@@ -341,6 +341,7 @@ class EmailService {
       );
       helpers.CreateError(400, error);
     }
+    console.log("list :>> ", listboxes);
     const mailBoxImap = await ImapEmail.create({
       ...obj,
       pass: encryptedPassword,
@@ -350,8 +351,12 @@ class EmailService {
     return mailBoxImap;
   }
 
-  async getCreateOrUpdateCountMail(client, array, host, isUpdate = false) {
-    const updatedMailboxes = array.map(async (mailbox) => {
+  async getCreateOrUpdateCountMail(
+    client,
+    { mailboxes, host, _id },
+    isUpdate = false
+  ) {
+    const updatedMailboxes = mailboxes.map(async (mailbox) => {
       const status = await client.status(mailbox.path, { messages: true });
       const updatedMailbox = isUpdate
         ? {
@@ -365,15 +370,18 @@ class EmailService {
             nameUa:
               host === "imap.gmail.com"
                 ? mailbox.name
-                : this.convertUaconvertUa(mailbox.name),
+                : this.convertUa(mailbox.name),
             path: mailbox.path,
             countMail: status.messages,
           };
 
       return updatedMailbox;
     });
-
-    return await Promise.all(updatedMailboxes);
+    const list = await Promise.all(updatedMailboxes);
+    if (isUpdate) {
+      await ImapEmail.findByIdAndUpdate(_id, { $set: { mailboxes: list } });
+    }
+    return list.filter((item) => item.countMail);
   }
 
   async getMailBoxes(imapConfig, itemPerPage = 30) {
@@ -383,25 +391,22 @@ class EmailService {
 
     const list = await client.list();
 
-    const listMailBox = await this.getCreateOrUpdateCountMail(
-      client,
-      list,
-      imapConfig.host
-    );
+    const listMailBox = await this.getCreateOrUpdateCountMail(client, {
+      mailboxes: list,
+      host: imapConfig.host,
+    });
 
     const listMail = await this.getListFromBox(
       client,
-      listMailBox[0].itemPerPage
+      listMailBox[0],
+      itemPerPage
     );
 
     await client.logout();
     await client.close();
 
     return {
-      listMailBox:
-        imapConfig.host === "imap.gmail.com"
-          ? listMailBox.filter((box) => box.path !== "[Gmail]")
-          : listMailBox,
+      listMailBox,
       listMail,
     };
 

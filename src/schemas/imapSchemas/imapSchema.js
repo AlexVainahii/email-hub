@@ -21,7 +21,7 @@ const imapSchema = Joi.object({
     .messages({ "any.required": "Host is required" }),
   secure: Joi.boolean()
     .required()
-    .messages({ "any.required": "tls is required" }),
+    .messages({ "any.required": "secure is required" }),
   owner: Joi.string().messages({ "any.required": "Owner is required" }),
   mailboxes: Joi.array()
     .items(
