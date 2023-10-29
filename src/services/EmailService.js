@@ -243,7 +243,7 @@ class EmailService {
     const imapEmail = listImap[0];
 
     const { mailboxes } = imapEmail;
-    console.log("mailboxes :>> ", mailboxes);
+
     const imapConfig = this.createImapConfig(imapEmail);
 
     const client = new ImapFlow(imapConfig);
@@ -252,12 +252,12 @@ class EmailService {
 
     const updatedMailboxes = mailboxes.map(async (mailbox) => {
       const status = await client.status(mailbox.path, { messages: true });
-      console.log("mailbox :>> ", mailbox);
+
       const updatedMailbox = {
         ...mailbox.toObject(),
         countMail: status.messages, // Оновлене значення countMail
       };
-      console.log("updatedMailbox :>> ", updatedMailbox);
+
       return updatedMailbox;
     });
 
@@ -277,7 +277,7 @@ class EmailService {
       )) {
         listMail.push({
           id: message.uid,
-          from: message.envelope.from[1],
+          from: message.envelope.from[0],
           date: message.envelope.date,
           subject: message.envelope.subject,
         });
@@ -338,6 +338,7 @@ class EmailService {
 
     return mailBox;
   }
+
   async getMailboxes(imapConfig, itemPerPage = 30) {
     function convertUa(name) {
       const translations = {
