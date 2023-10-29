@@ -9,10 +9,10 @@ router.get("/", middleW.authenticate, emailsCtrl.getAllBox);
 router.get("/getAll", middleW.authenticate, emailsCtrl.getEmails);
 router.get("/getBox", emailsCtrl.getEmailBox);
 router.post(
-  "/addBox",
+  "/addBoxImap",
   middleW.authenticate,
   middleW.validateBody(schemas.imapSchema),
-  emailsCtrl.addBox
+  emailsCtrl.addBoxImap
 );
 router.patch(
   "/perPage",

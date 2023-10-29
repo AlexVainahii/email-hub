@@ -43,6 +43,16 @@ class EmailService {
     };
   }
 
+  convertUa(name) {
+    const translations = {
+      Sent: "Відправлені",
+      Drafts: "Чернетки",
+      Spam: "Спам",
+      Trash: "Смітник",
+    };
+    return translations[name] || name;
+  }
+
   // async getEmailList(_id, boxName = false) {
   //   const user = await User.findById({ _id });
 
@@ -234,6 +244,31 @@ class EmailService {
   //   });
   // }
 
+  async getListFromBox(client, box, itemPerPage) {
+    const lock = await client.getMailboxLock(box.path);
+
+    const listMail = [];
+    try {
+      for await (const message of client.fetch(
+        `${box.countMail - itemPerPage < 1 ? 1 : box.countMail - itemPerPage}:${
+          box.countMail
+        }`,
+        { envelope: true }
+      )) {
+        listMail.push({
+          id: message.uid,
+          from: message.envelope.from[0],
+          date: message.envelope.date,
+          subject: message.envelope.subject,
+        });
+      }
+    } finally {
+      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
+      lock.release();
+    }
+    return listMail;
+  }
+
   async allMailBox(_id, itemPerPage, email = false) {
     const listImap = email
       ? await ImapEmail.find({ email: email })
@@ -250,42 +285,18 @@ class EmailService {
 
     await client.connect();
 
-    const updatedMailboxes = mailboxes.map(async (mailbox) => {
-      const status = await client.status(mailbox.path, { messages: true });
+    const listMailBox = await this.getCreateOrUpdateCountMail(
+      client,
+      mailboxes,
+      imapConfig.host,
+      true
+    );
 
-      const updatedMailbox = {
-        ...mailbox.toObject(),
-        countMail: status.messages, // Оновлене значення countMail
-      };
-
-      return updatedMailbox;
-    });
-
-    // Очікування, поки всі обіцянки завершаться
-    const listMailBox = await Promise.all(updatedMailboxes);
-    const lock = await client.getMailboxLock(listMailBox[0].path);
-
-    const listMail = [];
-    try {
-      for await (const message of client.fetch(
-        `${
-          listMailBox[0].countMail - itemPerPage < 1
-            ? 1
-            : listMailBox[0].countMail - itemPerPage
-        }:${listMailBox[0].countMail}`,
-        { envelope: true }
-      )) {
-        listMail.push({
-          id: message.uid,
-          from: message.envelope.from[0],
-          date: message.envelope.date,
-          subject: message.envelope.subject,
-        });
-      }
-    } finally {
-      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
-      lock.release();
-    }
+    const listMail = await this.getListFromBox(
+      client,
+      listMailBox[0],
+      itemPerPage
+    );
 
     await client.logout();
     await client.close();
@@ -311,7 +322,7 @@ class EmailService {
       };
   }
 
-  async addMailBox(obj, itemPerPage) {
+  async addMailBoxImap(obj, itemPerPage) {
     const { email, pass } = obj;
     const imapEmail = await ImapEmail.findOne({ email });
     helpers.CheckByError(imapEmail, 409, "Provided email already exists");
@@ -319,7 +330,7 @@ class EmailService {
     const encryptedPassword = this.encrypt(pass);
     let listboxes = [];
     try {
-      listboxes = await this.getMailboxes(
+      listboxes = await this.getMailBoxes(
         this.createImapConfig({ ...obj, pass: encryptedPassword }),
         itemPerPage
       );
@@ -330,82 +341,58 @@ class EmailService {
       );
       helpers.CreateError(400, error);
     }
-    const mailBox = await ImapEmail.create({
+    const mailBoxImap = await ImapEmail.create({
       ...obj,
       pass: encryptedPassword,
       mailboxes: [...listboxes.listMailBox],
     });
 
-    return mailBox;
+    return mailBoxImap;
   }
 
-  async getMailboxes(imapConfig, itemPerPage = 30) {
-    function convertUa(name) {
-      const translations = {
-        Sent: "Відправлені",
-        Drafts: "Чернетки",
-        Spam: "Спам",
-        Trash: "Смітник",
-      };
-      return translations[name] || name;
-    }
+  async getCreateOrUpdateCountMail(client, array, host, isUpdate = false) {
+    const updatedMailboxes = array.map(async (mailbox) => {
+      const status = await client.status(mailbox.path, { messages: true });
+      const updatedMailbox = isUpdate
+        ? {
+            ...mailbox.toObject(),
+            countMail: status.messages, // Оновлене значення countMail
+          }
+        : {
+            nameEn:
+              mailbox.specialUse?.slice(1) ||
+              Array.from(mailbox.flags)[1].slice(1),
+            nameUa:
+              host === "imap.gmail.com"
+                ? mailbox.name
+                : this.convertUaconvertUa(mailbox.name),
+            path: mailbox.path,
+            countMail: status.messages,
+          };
 
+      return updatedMailbox;
+    });
+
+    return await Promise.all(updatedMailboxes);
+  }
+
+  async getMailBoxes(imapConfig, itemPerPage = 30) {
     const client = new ImapFlow(imapConfig);
 
     await client.connect();
 
     const list = await client.list();
 
-    const listMailBox = await Promise.all(
-      list.map(async (mailbox) => {
-        const status = await client.status(mailbox.path, { messages: true });
-        console.log("mailbox :>> ", mailbox);
-        return {
-          nameEn:
-            mailbox.specialUse?.slice(1) ||
-            Array.from(mailbox.flags)[1].slice(1),
-          nameUa:
-            imapConfig.host === "imap.gmail.com"
-              ? mailbox.name
-              : convertUa(mailbox.name),
-          path: mailbox.path,
-          countMail: status.messages,
-        };
-      })
+    const listMailBox = await this.getCreateOrUpdateCountMail(
+      client,
+      list,
+      imapConfig.host
     );
-    const lock = await client.getMailboxLock(listMailBox[0].path);
-    const listMail = [];
-    try {
-      // fetch latest message source
-      // client.mailbox includes information about currently selected mailbox
-      // "exists" value is also the largest sequence number available in the mailbox
 
-      // const message = await client.fetchOne(client.mailbox.exists, {
-      //   source: true,
-      // });
-      // console.log(message.source.toString());
-
-      // list subjects for all messages
-      // uid value is always included in FETCH response, envelope strings are in unicode.
-
-      for await (const message of client.fetch(
-        `${
-          listMailBox[0].countMail - itemPerPage < 1
-            ? 1
-            : listMailBox[0].countMail - itemPerPage
-        }:${listMailBox[0].countMail}`,
-        { envelope: true }
-      )) {
-        console.log(`${message.uid}: ${message.envelope.subject}`);
-        listMail.push({
-          id: message.uid,
-          tema: { ...message, modseq: Number(message.modseq) },
-        });
-      }
-    } finally {
-      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
-      lock.release();
-    }
+    const listMail = await this.getListFromBox(
+      client,
+      listMailBox[0].itemPerPage
+    );
 
     await client.logout();
     await client.close();
