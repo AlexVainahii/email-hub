@@ -8,7 +8,7 @@ const getEmailsFromBox = async (req, res) => {
     .then((listEmail) => {
       console.log("Список електронних листів:");
 
-      res.json({ data: listEmail, status: 200 });
+      res.json({ data: { listEmail }, status: 200 });
     })
     .catch((error) => {
       console.error("Помилка при отриманні списку електронних листів:", error);
