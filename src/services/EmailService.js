@@ -190,10 +190,11 @@ class EmailService {
       return updatedMailbox;
     });
     const list = await Promise.all(updatedMailboxes);
+
     if (isUpdate) {
       await ImapEmail.findByIdAndUpdate(_id, { $set: { mailboxes: list } });
     }
-    return list.filter((item) => item.countMail);
+    return list.filter((item) => item.path !== "[Gmail]");
   }
 
   async getMailBoxes(imapConfig, itemPerPage = 30) {
