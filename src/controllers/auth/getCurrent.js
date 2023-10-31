@@ -10,6 +10,7 @@ const getCurrent = async (req, res) => {
     birthDay,
     verify,
     token,
+    itemPerPage,
     createdAt,
     updatedAt,
   } = req.user;
@@ -23,6 +24,7 @@ const getCurrent = async (req, res) => {
     skype,
     birthDay,
     verify,
+    itemPerPage,
     createdAt,
     updatedAt,
   };

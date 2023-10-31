@@ -37,6 +37,7 @@ class UserService {
         updatedAt: newUser.updatedAt,
         verificationToken: newUser.verificationToken,
         verify: newUser.verify,
+        itemPerPage: newUser.itemPerPage,
       },
       token: token,
     };
@@ -54,6 +55,7 @@ class UserService {
       skype,
       birthDay,
       verify,
+      itemPerPage,
       createdAt,
       updatedAt,
     } = user;
@@ -84,6 +86,7 @@ class UserService {
         skype,
         birthDay,
         verify,
+        itemPerPage,
         createdAt,
         updatedAt,
       },
