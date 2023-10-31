@@ -1,10 +1,7 @@
 const { EmailService } = require("@services");
 
 const getEmailsFromBox = async (req, res) => {
-  const { _id, path } = req.query;
-  console.log("343 :>> ");
-
-  EmailService.getEmailList(_id, path)
+  EmailService.getEmailList(req.query)
     .then((listEmail) => {
       console.log("Список електронних листів:");
 
@@ -12,7 +9,7 @@ const getEmailsFromBox = async (req, res) => {
     })
     .catch((error) => {
       console.error("Помилка при отриманні списку електронних листів:", error);
-      res.json({ error, status: 500 });
+      res.status(500).json({ error, status: 500 });
     });
 };
 

@@ -55,26 +55,33 @@ class EmailService {
     return translations[name] || name;
   }
 
-  async getListFromBox(imapConfig, box, itemPerPage) {
+  async getListFromBox(imapConfig, path, itemPerPage, page) {
     const client = new ImapFlow(imapConfig);
 
     await client.connect();
 
-    const lock = await client.getMailboxLock(box.path);
+    const lock = await client.getMailboxLock(path);
+    const status = await client.status(path, {
+      messages: true,
+    });
 
+    const list = await client.search({ seen: false });
     const listMail = [];
     try {
       for await (const message of client.fetch(
-        `${box.countMail - itemPerPage < 1 ? 1 : box.countMail - itemPerPage}:${
-          box.countMail
-        }`,
+        `${
+          status.messages - (itemPerPage * page + 1) < 1
+            ? 1
+            : status.messages - itemPerPage * page + 1
+        }:${status.messages - itemPerPage * (page - 1)}`,
         { envelope: true }
       )) {
         listMail.push({
-          id: message.uid,
+          id: message.seq,
           from: message.envelope.from[0],
           date: message.envelope.date,
           subject: message.envelope.subject,
+          unseen: list.includes(message.seq),
         });
       }
     } finally {
@@ -84,7 +91,7 @@ class EmailService {
 
     await client.logout();
     await client.close();
-    return listMail;
+    return listMail.sort((a, b) => b.id - a.id);
   }
 
   async allMailBox(_id, itemPerPage, email = false) {
@@ -216,20 +223,21 @@ class EmailService {
     };
   }
 
-  async getEmailList(_id, path) {
-    const imapModel = await ImapEmail.findById(_id);
+  async getEmailList({ _id, path, page }) {
+    const imapModel = await ImapEmail.findOne({ _id });
 
     const { itemPerPage } = await User.findById({ _id: imapModel.owner });
-
-    console.log("itemPerPage :>> ", itemPerPage);
-
-    const box = imapModel.mailboxes.find((item) => item.path === path);
 
     helpers.CheckByError(!imapModel, 404, "Imap settings not found");
 
     const imapConfig = this.createImapConfig(imapModel);
 
-    const listEmail = await this.getListFromBox(imapConfig, box, itemPerPage);
+    const listEmail = await this.getListFromBox(
+      imapConfig,
+      path,
+      itemPerPage,
+      page
+    );
 
     return listEmail;
   }
