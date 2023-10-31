@@ -1,6 +1,7 @@
 const { EmailService } = require("@services");
 
 const getEmailsFromBox = async (req, res) => {
+  console.log("req.query :>> ", req.query);
   EmailService.getEmailList(req.query)
     .then((listEmail) => {
       console.log("Список електронних листів:");
