@@ -68,9 +68,14 @@ class EmailService {
     const list = await client.search({ seen: false });
     const listMail = [];
     try {
-      for await (const message of client.fetch(`${1}:${status.messages}`, {
-        envelope: true,
-      })) {
+      for await (const message of client.fetch(
+        `${
+          status.messages - (itemPerPage * page + 1) < 1
+            ? 1
+            : status.messages - itemPerPage * page + 1
+        }:${status.messages - itemPerPage * (page - 1)}`,
+        { envelope: true }
+      )) {
         listMail.push({
           id: message.seq,
           from: message.envelope.from[0],
@@ -230,7 +235,7 @@ class EmailService {
     const listEmail = await this.getListFromBox(
       imapConfig,
       path,
-      itemPerPage,
+      itemPerPage * 10,
       page
     );
 
