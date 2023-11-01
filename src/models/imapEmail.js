@@ -59,7 +59,7 @@ const imapConfigShema = new Schema(
               name: String,
               address: String,
             },
-            date: String,
+            date: Date,
             subject: String,
             unseen: String,
           },

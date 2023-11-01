@@ -5,10 +5,14 @@ const { getEmailBox } = require("./getEmailBox");
 const { addBoxImap } = require("./addBoxImap");
 const { patchPerPage } = require("./patchPerPage");
 const { getAllBox } = require("./getAllBox");
+const { editBoxImap } = require("./editBoxImap");
+const { deleteBoxImap } = require("./deleteBoxImap");
 module.exports = {
   getEmailsFromBox: expressAsyncHandler(getEmailsFromBox),
   getEmailBox: expressAsyncHandler(getEmailBox),
   addBoxImap: expressAsyncHandler(addBoxImap),
   patchPerPage: expressAsyncHandler(patchPerPage),
   getAllBox: expressAsyncHandler(getAllBox),
+  editBoxImap: expressAsyncHandler(editBoxImap),
+  deleteBoxImap: expressAsyncHandler(deleteBoxImap),
 };

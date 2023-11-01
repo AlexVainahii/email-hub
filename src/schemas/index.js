@@ -13,7 +13,11 @@ const {
   getFakeTaskSchema,
 } = require("./taskSchemas");
 const { postReviewSchema, patchReviewSchema } = require("./reviewSchemas");
-const { imapSchema, itemPerPageSchema } = require("./imapSchemas");
+const {
+  imapSchema,
+  itemPerPageSchema,
+  editImapSchema,
+} = require("./imapSchemas");
 const schemas = {
   registerSchema,
   emailSchema,
@@ -28,6 +32,7 @@ const schemas = {
   getFakeTaskSchema,
   imapSchema,
   itemPerPageSchema,
+  editImapSchema,
 };
 
 module.exports = { schemas };

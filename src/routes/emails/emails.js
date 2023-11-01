@@ -25,6 +25,20 @@ router.patch(
   emailsCtrl.patchPerPage
 );
 
+router.patch(
+  "/:id",
+  middleW.isValidId,
+  middleW.authenticate,
+  middleW.validateBody(schemas.editImapSchema),
+  emailsCtrl.editBoxImap
+);
+
+router.delete(
+  "/:id",
+  middleW.isValidId,
+  middleW.authenticate,
+  emailsCtrl.deleteBoxImap
+);
 // router.post(
 //   "/login",
 //   middleW.validateBody(schemas.loginSchema),

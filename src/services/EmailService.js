@@ -113,7 +113,8 @@ class EmailService {
     const listMailBox = await this.getCreateOrUpdateCountMail(
       client,
       imapEmail,
-      true
+      true,
+      itemPerPage
     );
 
     await client.logout();
@@ -168,10 +169,63 @@ class EmailService {
     return mailBoxImap;
   }
 
+  async deleteBoxImap(_id, userId) {
+    console.log("_id :>> ", _id);
+    const imapEmail = await ImapEmail.findById(_id);
+    console.log("imapEmail :>> ", imapEmail);
+    helpers.CheckByError(
+      imapEmail.owner._id.toString() !== userId.toString(),
+      404
+    );
+    const result = await ImapEmail.findByIdAndRemove(_id);
+    helpers.CheckByError(!result, 404);
+    return result;
+  }
+
+  async editBoxImap(_id, userId, body) {
+    const imapEmail = await ImapEmail.findById(_id);
+
+    helpers.CheckByError(
+      imapEmail.owner._id.toString() !== userId.toString(),
+      404
+    );
+
+    const { host, port, email, user, pass, secure } = body;
+    let listboxes = [];
+    if (host || port || email || user || pass || secure) {
+      try {
+        listboxes = await this.getMailBoxes(
+          this.createImapConfig({ ...body, pass: this.encrypt(pass) }),
+          250
+        );
+      } catch (error) {
+        console.error(
+          "Помилка при отриманні інформації про поштові ящики:",
+          error
+        );
+        helpers.CreateError(400, error);
+      }
+    }
+
+    const newImapEmail = {
+      ...body,
+      pass: pass ? this.encrypt(pass) : body.pass,
+      mailboxes: listboxes.length
+        ? [...listboxes.listMailBox]
+        : [body.mailboxes],
+    };
+    const result = await ImapEmail.findByIdAndUpdate(_id, newImapEmail, {
+      new: true,
+    });
+    helpers.CheckByError(!result, 404);
+    return result;
+  }
+
   async getCreateOrUpdateCountMail(
     client,
     { mailboxes, _id },
-    isUpdate = false
+    isUpdate = false,
+    itemPerPage
   ) {
     const updatedMailboxes = mailboxes.map(async (mailbox) => {
       const status = await client.status(mailbox.path, {
@@ -181,7 +235,7 @@ class EmailService {
       if (mailbox.countMail === status.messages) return mailbox;
 
       const { listEmail, countMail, countMailUnseen } =
-        await this.getListFromBox(client, mailbox.path, status, 50, 1);
+        await this.getListFromBox(client, mailbox.path, status, itemPerPage, 1);
 
       const updatedMailbox = isUpdate
         ? {
@@ -218,9 +272,14 @@ class EmailService {
 
     const list = await client.list();
 
-    const listMailBox = await this.getCreateOrUpdateCountMail(client, {
-      mailboxes: list,
-    });
+    const listMailBox = await this.getCreateOrUpdateCountMail(
+      client,
+      {
+        mailboxes: list,
+      },
+      false,
+      250
+    );
     console.log("listMailBox:>> ", listMailBox);
     await client.logout();
     await client.close();

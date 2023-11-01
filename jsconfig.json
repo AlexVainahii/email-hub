@@ -14,5 +14,5 @@
       "@helpers": ["./src/helpers"]
     }
   },
-  "include": ["src/**/*", "app.js"]
+  "include": ["src/**/*", "app.js", "src/schemas/imapSchemas/.js"]
 }

@@ -1,7 +1,7 @@
 const { EmailService } = require("@services");
 const helpers = require("@helpers");
 const addBoxImap = async (req, res) => {
-  const { _id: owner, itemPerPage } = req.user;
+  const { _id: owner } = req.user;
   const { email, pass, port, host, secure } = req.body;
   helpers.CheckByError(
     !email || !pass || !port || !host || !secure,
@@ -10,7 +10,7 @@ const addBoxImap = async (req, res) => {
   );
   const newEmailBox = await EmailService.addMailBoxImap(
     { owner, ...req.body },
-    itemPerPage
+    250
   );
 
   res.status(201).json({ data: newEmailBox, status: 201 });
