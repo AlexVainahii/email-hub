@@ -52,6 +52,18 @@ const imapConfigShema = new Schema(
         path: String,
         countMail: Number,
         countMailUnseen: Number,
+        mailList: [
+          {
+            id: Number,
+            from: {
+              name: String,
+              address: String,
+            },
+            date: String,
+            subject: String,
+            unseen: String,
+          },
+        ],
       },
     ],
   },

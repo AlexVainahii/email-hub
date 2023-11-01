@@ -55,16 +55,15 @@ class EmailService {
     return translations[name] || name;
   }
 
-  async getListFromBox(imapConfig, path, itemPerPage, page) {
-    const client = new ImapFlow(imapConfig);
-
-    await client.connect();
+  async getListFromBox(client, path, status, itemPerPage, page) {
+    if (path === "[Gmail]")
+      return {
+        listEmail: [],
+        countMail: null,
+        countMailUnseen: null,
+      };
 
     const lock = await client.getMailboxLock(path);
-    const status = await client.status(path, {
-      messages: true,
-    });
-
     const list = await client.search({ seen: false });
     const listMail = [];
     try {
@@ -89,9 +88,11 @@ class EmailService {
       lock.release();
     }
 
-    await client.logout();
-    await client.close();
-    return listMail.sort((a, b) => b.id - a.id);
+    return {
+      listEmail: listMail.sort((a, b) => b.id - a.id),
+      countMail: status.messages,
+      countMailUnseen: status.unseen,
+    };
   }
 
   async allMailBox(_id, itemPerPage, email = false) {
@@ -177,12 +178,17 @@ class EmailService {
         messages: true,
         unseen: true,
       });
+      if (mailbox.countMail === status.messages) return mailbox;
+
+      const { listEmail, countMail, countMailUnseen } =
+        await this.getListFromBox(client, mailbox.path, status, 50, 1);
 
       const updatedMailbox = isUpdate
         ? {
             ...mailbox.toObject(),
-            countMail: status.messages,
-            countMailUnseen: status.unseen, // Оновлене значення countMail
+            countMail,
+            countMailUnseen,
+            mailList: listEmail, // Оновлене значення countMail
           }
         : {
             nameEn:
@@ -190,8 +196,9 @@ class EmailService {
               Array.from(mailbox.flags)[1].slice(1),
             nameUa: this.convertUa(mailbox.name),
             path: mailbox.path,
-            countMail: status.messages,
-            countMailUnseen: status.unseen,
+            countMail,
+            countMailUnseen,
+            mailList: listEmail,
           };
 
       return updatedMailbox;
@@ -214,7 +221,7 @@ class EmailService {
     const listMailBox = await this.getCreateOrUpdateCountMail(client, {
       mailboxes: list,
     });
-
+    console.log("listMailBox:>> ", listMailBox);
     await client.logout();
     await client.close();
 
@@ -231,15 +238,22 @@ class EmailService {
     helpers.CheckByError(!imapModel, 404, "Imap settings not found");
 
     const imapConfig = this.createImapConfig(imapModel);
-
-    const listEmail = await this.getListFromBox(
-      imapConfig,
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+    const status = await client.status(path, {
+      messages: true,
+      unseen: true,
+    });
+    const listEmailObj = await this.getListFromBox(
+      client,
       path,
+      status,
       itemPerPage * 10,
       page
     );
-
-    return listEmail;
+    await client.logout();
+    await client.close();
+    return listEmailObj;
   }
 }
 module.exports = new EmailService();
