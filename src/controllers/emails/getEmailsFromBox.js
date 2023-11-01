@@ -9,6 +9,7 @@ const getEmailsFromBox = async (req, res) => {
       res.json({
         data: {
           ...listEmailObj,
+          ...req.query,
         },
         status: 200,
       });
