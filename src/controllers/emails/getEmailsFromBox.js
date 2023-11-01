@@ -7,10 +7,9 @@ const getEmailsFromBox = async (req, res) => {
       console.log("Список електронних листів:");
 
       res.json({
-        data: {
-          ...listEmailObj,
-          ...req.query,
-        },
+        ...listEmailObj,
+        ...req.query,
+
         status: 200,
       });
     })
