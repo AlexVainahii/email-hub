@@ -2,6 +2,8 @@ const CryptoJS = require("crypto-js");
 const helpers = require("@helpers");
 const { ImapEmail, User } = require("@models");
 const { ImapFlow } = require("imapflow");
+// const nodemailer = require("nodemailer");
+const { simpleParser } = require("mailparser");
 
 class EmailService {
   encrypt(password) {
@@ -329,9 +331,11 @@ class EmailService {
 
       // Завантаження вмісту повідомлення
       const { source } = await client.fetchOne(uid, { source: true });
-
+      const mailObject = await simpleParser(source);
+      const htmlContent = mailObject.html;
+      console.log(htmlContent);
       // Обробка або виведення вмісту повідомлення
-      return { htmlContent: Buffer.from(source, "base64").toString("utf8") };
+      return { htmlContent: htmlContent };
     } catch (error) {
       console.error("Error:", error);
     } finally {
