@@ -170,7 +170,6 @@ class EmailService {
   }
 
   async deleteBoxImap(_id, userId) {
-    console.log("_id :>> ", _id);
     const imapEmail = await ImapEmail.findById(_id);
     console.log("imapEmail :>> ", imapEmail);
     helpers.CheckByError(
@@ -182,9 +181,8 @@ class EmailService {
     return result;
   }
 
-  async editBoxImap(_id, userId, body) {
-    const imapEmail = await ImapEmail.findById(_id);
-
+  async editBoxImap(id, userId, body) {
+    const imapEmail = await ImapEmail.findById(id);
     helpers.CheckByError(
       imapEmail.owner._id.toString() !== userId.toString(),
       404
@@ -209,12 +207,13 @@ class EmailService {
 
     const newImapEmail = {
       ...body,
-      pass: pass ? this.encrypt(pass) : body.pass,
+      pass: pass ? this.encrypt(pass) : ImapEmail.pass,
       mailboxes: listboxes.length
         ? [...listboxes.listMailBox]
-        : [body.mailboxes],
+        : ImapEmail.mailboxes,
     };
-    const result = await ImapEmail.findByIdAndUpdate(_id, newImapEmail, {
+    console.log("ne :>> ", newImapEmail);
+    const result = await ImapEmail.findByIdAndUpdate(id, newImapEmail, {
       new: true,
     });
     helpers.CheckByError(!result, 404);
