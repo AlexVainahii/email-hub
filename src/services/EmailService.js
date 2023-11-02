@@ -331,7 +331,7 @@ class EmailService {
       const { source } = await client.fetchOne(uid, { source: true });
 
       // Обробка або виведення вмісту повідомлення
-      return { htmlContent: source.toString("utf8") };
+      return { htmlContent: Buffer.from(source, "base64").toString("utf8") };
     } catch (error) {
       console.error("Error:", error);
     } finally {
