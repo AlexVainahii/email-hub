@@ -313,5 +313,31 @@ class EmailService {
     await client.close();
     return listEmailObj;
   }
+
+  async getMailOne({ id, path, uid }) {
+    console.log("_id :>> ", id);
+    const imapModel = await ImapEmail.findById(id);
+
+    const imapConfig = this.createImapConfig(imapModel);
+
+    const client = new ImapFlow(imapConfig);
+    try {
+      // Встановлення з'єднання
+      await client.connect();
+
+      await client.mailboxOpen(path);
+
+      // Завантаження вмісту повідомлення
+      const { source } = await client.fetchOne(uid, { source: true });
+
+      // Обробка або виведення вмісту повідомлення
+      return { htmlContent: source.toString("utf8") };
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      // Завершення роботи з IMAP-сервером
+      await client.logout();
+    }
+  }
 }
 module.exports = new EmailService();

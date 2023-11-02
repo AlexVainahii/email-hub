@@ -12,6 +12,7 @@ router.get(
   emailsCtrl.getEmailsFromBox
 );
 router.get("/getBox", emailsCtrl.getEmailBox);
+router.get("/getMailOne/:id", middleW.authenticate, emailsCtrl.getMailOne);
 router.post(
   "/addBoxImap",
   middleW.authenticate,
