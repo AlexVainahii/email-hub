@@ -378,19 +378,26 @@ class EmailService {
 
     const lock = await client.getMailboxLock(path);
     const searchResults = await client.search({
-      or: [{ subject: search }],
+      or: [{ subject: search }, { body: search }],
     });
 
     const listMail = [];
     try {
+      const list = await client.search({
+        seq: searchResults.join(","),
+        seen: false,
+      });
+      console.log("list :>> ", list);
       for await (const message of client.fetch(searchResults.join(","), {
         envelope: true,
       })) {
+        console.log("message :>> ", message);
         listMail.push({
           id: message.seq,
           from: message.envelope.from[0],
           date: message.envelope.date,
           subject: message.envelope.subject,
+          unseen: list.includes(message.seq),
         });
       }
     } finally {
