@@ -376,14 +376,34 @@ class EmailService {
 
     await client.mailboxOpen(path);
 
+    const lock = await client.getMailboxLock(path);
     const searchResults = await client.search({
       or: [{ subject: search }],
     });
 
+    const listMail = [];
+    try {
+      for await (const message of client.fetch(searchResults.join(","), {
+        envelope: true,
+      })) {
+        listMail.push({
+          id: message.seq,
+          from: message.envelope.from[0],
+          date: message.envelope.date,
+          subject: message.envelope.subject,
+        });
+      }
+    } finally {
+      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
+      lock.release();
+    }
+
     await client.logout();
     await client.close();
 
-    return searchResults;
+    return {
+      listEmail: listMail.sort((a, b) => b.id - a.id),
+    };
   }
 }
 module.exports = new EmailService();

@@ -3,11 +3,11 @@ const { EmailService } = require("@services");
 const getEmailsFromSearch = async (req, res) => {
   console.log("req.query :>> ", req.query);
   EmailService.getEmailListSearch(req.query)
-    .then((searchResults) => {
+    .then((fullEmails) => {
       console.log("Список електронних листів:");
 
       res.status(200).json({
-        searchResults: searchResults,
+        searchResults: fullEmails,
         ...req.query,
         status: 200,
       });
