@@ -378,7 +378,12 @@ class EmailService {
 
     const lock = await client.getMailboxLock(path);
     const searchResults = await client.search({
-      or: [{ subject: search }, { body: search }],
+      or: [
+        { subject: search },
+        { body: search },
+        { from: search },
+        { to: search },
+      ],
     });
 
     const listMail = [];
