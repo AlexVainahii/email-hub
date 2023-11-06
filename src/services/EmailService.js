@@ -57,46 +57,6 @@ class EmailService {
     return translations[name] || name;
   }
 
-  async getListFromBox(client, path, status, itemPerPage, page) {
-    if (path === "[Gmail]")
-      return {
-        listEmail: [],
-        countMail: null,
-        countMailUnseen: null,
-      };
-
-    const lock = await client.getMailboxLock(path);
-    const list = await client.search({ seen: false });
-    const listMail = [];
-    try {
-      for await (const message of client.fetch(
-        `${
-          status.messages - (itemPerPage * page + 1) < 1
-            ? 1
-            : status.messages - itemPerPage * page + 1
-        }:${status.messages - itemPerPage * (page - 1)}`,
-        { envelope: true }
-      )) {
-        listMail.push({
-          id: message.seq,
-          from: message.envelope.from[0],
-          date: message.envelope.date,
-          subject: message.envelope.subject,
-          unseen: list.includes(message.seq),
-        });
-      }
-    } finally {
-      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
-      lock.release();
-    }
-
-    return {
-      listEmail: listMail.sort((a, b) => b.id - a.id),
-      countMail: status.messages,
-      countMailUnseen: status.unseen,
-    };
-  }
-
   async allMailBox(_id, itemPerPage, email = false) {
     const listImap = email
       ? await ImapEmail.find({ email: email })
@@ -171,6 +131,114 @@ class EmailService {
     return mailBoxImap;
   }
 
+  async getMailBoxes(imapConfig, itemPerPage = 30) {
+    const client = new ImapFlow(imapConfig);
+
+    await client.connect();
+
+    const list = await client.list();
+
+    const listMailBox = await this.getCreateOrUpdateCountMail(
+      client,
+      {
+        mailboxes: list,
+      },
+      false,
+      250
+    );
+    console.log("listMailBox:>> ", listMailBox);
+    await client.logout();
+    await client.close();
+
+    return {
+      listMailBox,
+    };
+  }
+
+  async getCreateOrUpdateCountMail(
+    client,
+    { mailboxes, _id },
+    isUpdate = false,
+    itemPerPage
+  ) {
+    const updatedMailboxes = mailboxes.map(async (mailbox) => {
+      const status = await client.status(mailbox.path, {
+        messages: true,
+        unseen: true,
+      });
+      if (mailbox.countMail === status.messages) return mailbox;
+
+      const { listEmail, countMail, countMailUnseen } =
+        await this.getListFromBox(client, mailbox.path, status, itemPerPage, 1);
+
+      const updatedMailbox = isUpdate
+        ? {
+            ...mailbox.toObject(),
+            countMail,
+            countMailUnseen,
+            mailList: listEmail, // Оновлене значення countMail
+          }
+        : {
+            nameEn:
+              mailbox.specialUse?.slice(1) ||
+              Array.from(mailbox.flags)[1].slice(1),
+            nameUa: this.convertUa(mailbox.name),
+            path: mailbox.path,
+            countMail,
+            countMailUnseen,
+            mailList: listEmail,
+          };
+
+      return updatedMailbox;
+    });
+    const list = await Promise.all(updatedMailboxes);
+
+    if (isUpdate) {
+      ImapEmail.findByIdAndUpdate(_id, { $set: { mailboxes: list } });
+    }
+    return list.filter((item) => item.path !== "[Gmail]");
+  }
+
+  async getListFromBox(client, path, status, itemPerPage, page) {
+    if (path === "[Gmail]")
+      return {
+        listEmail: [],
+        countMail: null,
+        countMailUnseen: null,
+      };
+
+    const lock = await client.getMailboxLock(path);
+    const list = await client.search({ seen: false });
+    const listMail = [];
+    try {
+      for await (const message of client.fetch(
+        `${
+          status.messages - (itemPerPage * page + 1) < 1
+            ? 1
+            : status.messages - itemPerPage * page + 1
+        }:${status.messages - itemPerPage * (page - 1)}`,
+        { envelope: true }
+      )) {
+        listMail.push({
+          id: message.seq,
+          from: message.envelope.from[0],
+          date: message.envelope.date,
+          subject: message.envelope.subject,
+          unseen: list.includes(message.seq),
+        });
+      }
+    } finally {
+      // Make sure lock is released, otherwise next `getMailboxLock()` never returns
+      lock.release();
+    }
+
+    return {
+      listEmail: listMail.sort((a, b) => b.id - a.id),
+      countMail: status.messages,
+      countMailUnseen: status.unseen,
+    };
+  }
+
   async deleteBoxImap(_id, userId) {
     const imapEmail = await ImapEmail.findById(_id);
     console.log("imapEmail :>> ", imapEmail);
@@ -222,74 +290,6 @@ class EmailService {
     return result;
   }
 
-  async getCreateOrUpdateCountMail(
-    client,
-    { mailboxes, _id },
-    isUpdate = false,
-    itemPerPage
-  ) {
-    const updatedMailboxes = mailboxes.map(async (mailbox) => {
-      const status = await client.status(mailbox.path, {
-        messages: true,
-        unseen: true,
-      });
-      if (mailbox.countMail === status.messages) return mailbox;
-
-      const { listEmail, countMail, countMailUnseen } =
-        await this.getListFromBox(client, mailbox.path, status, itemPerPage, 1);
-
-      const updatedMailbox = isUpdate
-        ? {
-            ...mailbox.toObject(),
-            countMail,
-            countMailUnseen,
-            mailList: listEmail, // Оновлене значення countMail
-          }
-        : {
-            nameEn:
-              mailbox.specialUse?.slice(1) ||
-              Array.from(mailbox.flags)[1].slice(1),
-            nameUa: this.convertUa(mailbox.name),
-            path: mailbox.path,
-            countMail,
-            countMailUnseen,
-            mailList: listEmail,
-          };
-
-      return updatedMailbox;
-    });
-    const list = await Promise.all(updatedMailboxes);
-
-    if (isUpdate) {
-      await ImapEmail.findByIdAndUpdate(_id, { $set: { mailboxes: list } });
-    }
-    return list.filter((item) => item.path !== "[Gmail]");
-  }
-
-  async getMailBoxes(imapConfig, itemPerPage = 30) {
-    const client = new ImapFlow(imapConfig);
-
-    await client.connect();
-
-    const list = await client.list();
-
-    const listMailBox = await this.getCreateOrUpdateCountMail(
-      client,
-      {
-        mailboxes: list,
-      },
-      false,
-      250
-    );
-    console.log("listMailBox:>> ", listMailBox);
-    await client.logout();
-    await client.close();
-
-    return {
-      listMailBox,
-    };
-  }
-
   async getEmailList({ _id, path, page }) {
     const imapModel = await ImapEmail.findOne({ _id });
 
@@ -313,6 +313,25 @@ class EmailService {
     );
     await client.logout();
     await client.close();
+    if (page === "1") {
+      await ImapEmail.updateOne(
+        { _id: imapModel._id },
+        {
+          $set: {
+            "mailboxes.$[mb].countMail": listEmailObj.countMail,
+            "mailboxes.$[mb].countMailUnseen": listEmailObj.countMailUnseen,
+            "mailboxes.$[mb].mailList":
+              listEmailObj.listEmail.length > 100
+                ? listEmailObj.listEmail.slice(0, 100)
+                : listEmailObj.listEmail,
+          },
+        },
+        {
+          arrayFilters: [{ "mb.path": path }],
+        }
+      );
+    }
+
     return listEmailObj;
   }
 
@@ -342,6 +361,29 @@ class EmailService {
       // Завершення роботи з IMAP-сервером
       await client.logout();
     }
+  }
+
+  async getEmailListSearch({ _id, path, search }) {
+    const imapModel = await ImapEmail.findOne({ _id });
+
+    // const { itemPerPage } = await User.findById({ _id: imapModel.owner });
+
+    helpers.CheckByError(!imapModel, 404, "Imap settings not found");
+
+    const imapConfig = this.createImapConfig(imapModel);
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+
+    await client.mailboxOpen(path);
+
+    const searchResults = await client.search({
+      or: [{ subject: search }],
+    });
+
+    await client.logout();
+    await client.close();
+
+    return searchResults;
   }
 }
 module.exports = new EmailService();

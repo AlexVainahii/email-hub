@@ -11,6 +11,11 @@ router.get(
   middleW.authenticate,
   emailsCtrl.getEmailsFromBox
 );
+router.get(
+  "/getEmailsFromSearch",
+  middleW.authenticate,
+  emailsCtrl.getEmailsFromSearch
+);
 router.get("/getBox", emailsCtrl.getEmailBox);
 router.get("/getMailOne/:id", middleW.authenticate, emailsCtrl.getMailOne);
 router.post(

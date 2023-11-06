@@ -1,6 +1,7 @@
 const expressAsyncHandler = require("express-async-handler");
 
 const { getEmailsFromBox } = require("./getEmailsFromBox");
+const { getEmailsFromSearch } = require("./getEmailsFromSearch");
 const { getEmailBox } = require("./getEmailBox");
 const { addBoxImap } = require("./addBoxImap");
 const { patchPerPage } = require("./patchPerPage");
@@ -10,6 +11,7 @@ const { deleteBoxImap } = require("./deleteBoxImap");
 const { getMailOne } = require("./getMailOne");
 module.exports = {
   getEmailsFromBox: expressAsyncHandler(getEmailsFromBox),
+  getEmailsFromSearch: expressAsyncHandler(getEmailsFromSearch),
   getEmailBox: expressAsyncHandler(getEmailBox),
   addBoxImap: expressAsyncHandler(addBoxImap),
   patchPerPage: expressAsyncHandler(patchPerPage),
