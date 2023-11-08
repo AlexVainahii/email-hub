@@ -7,7 +7,6 @@ const sendSchema = Joi.object({
     .pattern(emailRegexp)
     .required()
     .messages({ "any.required": "Email is required" }),
-
   _id: Joi.string().required().messages({ "any.required": "Id is required" }),
 });
 
