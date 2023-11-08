@@ -10,7 +10,10 @@ const editImapSchema = Joi.object({
   pass: Joi.string(),
   port: Joi.number(),
   host: Joi.string(),
+  smtpPort: Joi.number(),
+  smtpHost: Joi.string(),
   secure: Joi.boolean(),
+  smtpSecure: Joi.boolean(),
   owner: Joi.string(),
   mailboxes: Joi.array()
     .items(
