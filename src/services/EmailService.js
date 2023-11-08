@@ -2,7 +2,8 @@ const CryptoJS = require("crypto-js");
 const helpers = require("@helpers");
 const { ImapEmail, User } = require("@models");
 const { ImapFlow } = require("imapflow");
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
+
 const { simpleParser } = require("mailparser");
 
 class EmailService {
@@ -417,6 +418,41 @@ class EmailService {
     return {
       listEmail: listMail.sort((a, b) => b.id - a.id),
     };
+  }
+
+  async sendMailNew(obj) {
+    const { _id, recipient, subject, text } = obj;
+    const imapEmail = await ImapEmail.findById(_id);
+    console.log("imapEmail :>> ", imapEmail);
+    const transporter = nodemailer.createTransport({
+      host: imapEmail.smtpHost,
+      port: 465,
+      secure: true,
+
+      auth: {
+        user: imapEmail.email,
+        pass: this.decrypt(imapEmail.pass),
+      },
+    });
+
+    const mailOptions = {
+      from: imapEmail.email,
+      to: recipient,
+      subject,
+      text,
+    };
+    console.log("mailOptions :>> ", {
+      host: imapEmail.smtpHost,
+      port: imapEmail.smtpPort,
+      secure: imapEmail.secure,
+      auth: {
+        user: imapEmail.email,
+        pass: this.decrypt(imapEmail.pass),
+      },
+    });
+    const info = await transporter.sendMail(mailOptions);
+    console.log("info :>> ", info);
+    return info;
   }
 }
 module.exports = new EmailService();

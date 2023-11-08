@@ -30,7 +30,12 @@ router.patch(
   middleW.validateBody(schemas.itemPerPageSchema),
   emailsCtrl.patchPerPage
 );
-
+router.post(
+  "/sendMail",
+  middleW.authenticate,
+  middleW.validateBody(schemas.sendSchema),
+  emailsCtrl.sendMail
+);
 router.patch(
   "/:id",
   middleW.isValidId,

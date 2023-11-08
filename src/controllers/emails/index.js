@@ -9,6 +9,7 @@ const { getAllBox } = require("./getAllBox");
 const { editBoxImap } = require("./editBoxImap");
 const { deleteBoxImap } = require("./deleteBoxImap");
 const { getMailOne } = require("./getMailOne");
+const { sendMail } = require("./sendMail");
 module.exports = {
   getEmailsFromBox: expressAsyncHandler(getEmailsFromBox),
   getEmailsFromSearch: expressAsyncHandler(getEmailsFromSearch),
@@ -19,4 +20,5 @@ module.exports = {
   editBoxImap: expressAsyncHandler(editBoxImap),
   deleteBoxImap: expressAsyncHandler(deleteBoxImap),
   getMailOne: expressAsyncHandler(getMailOne),
+  sendMail: expressAsyncHandler(sendMail),
 };
