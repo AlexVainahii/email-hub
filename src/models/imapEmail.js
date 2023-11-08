@@ -51,7 +51,7 @@ const imapConfigShema = new Schema(
       required: [true, "Secure is required"],
       default: true,
     },
-    secureSmtp: {
+    smtpSecure: {
       type: Boolean,
       required: [true, "smtpSecure is required"],
       default: true,
