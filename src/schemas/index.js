@@ -18,6 +18,9 @@ const {
   itemPerPageSchema,
   editImapSchema,
   sendSchema,
+  moveEmailsSchema,
+  deleteEmailsSchema,
+  flagsEmailsSchema,
 } = require("./imapSchemas");
 const schemas = {
   registerSchema,
@@ -35,6 +38,9 @@ const schemas = {
   itemPerPageSchema,
   editImapSchema,
   sendSchema,
+  moveEmailsSchema,
+  deleteEmailsSchema,
+  flagsEmailsSchema,
 };
 
 module.exports = { schemas };

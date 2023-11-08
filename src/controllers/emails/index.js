@@ -10,6 +10,10 @@ const { editBoxImap } = require("./editBoxImap");
 const { deleteBoxImap } = require("./deleteBoxImap");
 const { getMailOne } = require("./getMailOne");
 const { sendMail } = require("./sendMail");
+const { moveEmails } = require("./moveEmails");
+const { deleteEmails } = require("./deleteEmails");
+const { flagsEmails } = require("./flagsEmails");
+const { getNewEmailsFromBox } = require("./getNewEmailsFromBox");
 module.exports = {
   getEmailsFromBox: expressAsyncHandler(getEmailsFromBox),
   getEmailsFromSearch: expressAsyncHandler(getEmailsFromSearch),
@@ -21,4 +25,8 @@ module.exports = {
   deleteBoxImap: expressAsyncHandler(deleteBoxImap),
   getMailOne: expressAsyncHandler(getMailOne),
   sendMail: expressAsyncHandler(sendMail),
+  moveEmails: expressAsyncHandler(moveEmails),
+  deleteEmails: expressAsyncHandler(deleteEmails),
+  flagsEmails: expressAsyncHandler(flagsEmails),
+  getNewEmailsFromBox: expressAsyncHandler(getNewEmailsFromBox),
 };

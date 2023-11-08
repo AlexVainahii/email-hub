@@ -201,24 +201,26 @@ class EmailService {
     return list.filter((item) => item.path !== "[Gmail]");
   }
 
-  async getListFromBox(client, path, status, itemPerPage, page) {
+  async getListFromBox(client, path, status, itemPerPage, page, uid = 0) {
     if (path === "[Gmail]")
       return {
         listEmail: [],
         countMail: null,
         countMailUnseen: null,
       };
-
+    console.log("uid :>> ", uid);
     const lock = await client.getMailboxLock(path);
     const list = await client.search({ seen: false });
     const listMail = [];
     try {
       for await (const message of client.fetch(
-        `${
-          status.messages - (itemPerPage * page + 1) < 1
-            ? 1
-            : status.messages - itemPerPage * page + 1
-        }:${status.messages - itemPerPage * (page - 1)}`,
+        uid === 0
+          ? `${
+              status.messages - (itemPerPage * page + 1) < 1
+                ? 1
+                : status.messages - itemPerPage * page + 1
+            }:${status.messages - itemPerPage * (page - 1)}`
+          : `${uid}:*`,
         { envelope: true }
       )) {
         listMail.push({
@@ -306,6 +308,7 @@ class EmailService {
       messages: true,
       unseen: true,
     });
+
     const listEmailObj = await this.getListFromBox(
       client,
       path,
@@ -313,6 +316,7 @@ class EmailService {
       itemPerPage * 10,
       page
     );
+
     await client.logout();
     await client.close();
     if (page === "1") {
@@ -423,7 +427,7 @@ class EmailService {
   async sendMailNew(obj) {
     const { _id, recipient, subject, text } = obj;
     const imapEmail = await ImapEmail.findById(_id);
-    console.log("imapEmail :>> ", imapEmail);
+
     const transporter = nodemailer.createTransport({
       host: imapEmail.smtpHost,
       port: 465,
@@ -441,18 +445,107 @@ class EmailService {
       subject,
       html: text,
     };
-    console.log("mailOptions :>> ", {
-      host: imapEmail.smtpHost,
-      port: imapEmail.smtpPort,
-      secure: imapEmail.secure,
-      auth: {
-        user: imapEmail.email,
-        pass: this.decrypt(imapEmail.pass),
-      },
-    });
+
     const info = await transporter.sendMail(mailOptions);
     console.log("info :>> ", info);
     return info;
+  }
+
+  async moveMails(obj) {
+    const { _id, fromPath, toPath, mailList } = obj;
+    const imapEmail = await ImapEmail.findById(_id);
+    const imapConfig = this.createImapConfig(imapEmail);
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+    await client.mailboxOpen(fromPath);
+    console.log("object :>> ");
+    // move all messages to a mailbox called "Trash" (must exist)
+    const result = await client.messageMove(mailList.join(","), toPath);
+    console.log("Moved %s messages", result.uidMap.size);
+    await client.logout();
+    await client.close();
+
+    return { newMailList: mailList };
+  }
+
+  async deleteMails(obj) {
+    const { _id, path, mailList } = obj;
+    const imapEmail = await ImapEmail.findById(_id);
+    const imapConfig = this.createImapConfig(imapEmail);
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+    await client.mailboxOpen(path);
+
+    const result = await client.messageDelete(mailList.join(","));
+    console.log("delete %s messages", result);
+    await client.logout();
+    await client.close();
+
+    return { newMailList: mailList };
+  }
+
+  async flagsMails(obj) {
+    const { _id, path, mailList, seen } = obj;
+    const imapEmail = await ImapEmail.findById(_id);
+    const imapConfig = this.createImapConfig(imapEmail);
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+    await client.mailboxOpen(path);
+    console.log("path,seen :>> ", path, seen);
+    const result = seen
+      ? await client.messageFlagsRemove(mailList.join(","), ["\\Seen"])
+      : await client.messageFlagsSet(mailList.join(","), ["\\Seen"]);
+    console.log("flags %s messages", result);
+    await client.logout();
+    await client.close();
+
+    return { newMailList: mailList };
+  }
+
+  async getNewEmailList({ _id, path, page, uid }) {
+    const imapModel = await ImapEmail.findOne({ _id });
+
+    const { itemPerPage } = await User.findById({ _id: imapModel.owner });
+
+    helpers.CheckByError(!imapModel, 404, "Imap settings not found");
+
+    const imapConfig = this.createImapConfig(imapModel);
+    const client = new ImapFlow(imapConfig);
+    await client.connect();
+    const status = await client.status(path, {
+      messages: true,
+      unseen: true,
+    });
+    const listEmailObj = await this.getListFromBox(
+      client,
+      path,
+      status,
+      itemPerPage,
+      page,
+      uid
+    );
+    await client.logout();
+    await client.close();
+    if (page === "1") {
+      await ImapEmail.updateOne(
+        { _id: imapModel._id },
+        {
+          $set: {
+            "mailboxes.$[mb].countMail": listEmailObj.countMail,
+            "mailboxes.$[mb].countMailUnseen": listEmailObj.countMailUnseen,
+            "mailboxes.$[mb].mailList":
+              listEmailObj.listEmail.length > 100
+                ? listEmailObj.listEmail.slice(0, 100)
+                : listEmailObj.listEmail,
+          },
+        },
+        {
+          arrayFilters: [{ "mb.path": path }],
+        }
+      );
+    }
+
+    return listEmailObj;
   }
 }
 module.exports = new EmailService();

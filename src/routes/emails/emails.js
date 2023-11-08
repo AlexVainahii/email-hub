@@ -12,6 +12,11 @@ router.get(
   emailsCtrl.getEmailsFromBox
 );
 router.get(
+  "/getNewEmailsFromBox",
+  middleW.authenticate,
+  emailsCtrl.getNewEmailsFromBox
+);
+router.get(
   "/getEmailsFromSearch",
   middleW.authenticate,
   emailsCtrl.getEmailsFromSearch
@@ -43,7 +48,25 @@ router.patch(
   middleW.validateBody(schemas.editImapSchema),
   emailsCtrl.editBoxImap
 );
+router.put(
+  "/move",
+  middleW.authenticate,
+  middleW.validateBody(schemas.moveEmailsSchema),
+  emailsCtrl.moveEmails
+);
+router.put(
+  "/flags",
+  middleW.authenticate,
+  middleW.validateBody(schemas.flagsEmailsSchema),
+  emailsCtrl.flagsEmails
+);
 
+router.delete(
+  "/delete",
+  middleW.authenticate,
+  middleW.validateBody(schemas.deleteEmailsSchema),
+  emailsCtrl.deleteEmails
+);
 router.delete(
   "/:id",
   middleW.isValidId,
