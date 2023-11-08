@@ -29,7 +29,7 @@ const imapSchema = Joi.object({
   secure: Joi.boolean()
     .required()
     .messages({ "any.required": "secure is required" }),
-  secureSmtp: Joi.boolean()
+  smtpSecure: Joi.boolean()
     .required()
     .messages({ "any.required": "smtpSecure is required" }),
   owner: Joi.string().messages({ "any.required": "Owner is required" }),
