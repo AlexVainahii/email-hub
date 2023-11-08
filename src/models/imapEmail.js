@@ -22,9 +22,13 @@ const imapConfigShema = new Schema(
       required: [true, "Email is required"],
       match: [helpers.emailRegexp, "Invalid email format."],
     },
-    pass: {
+    addressPass: {
       type: String,
       required: [true, "Password is required"],
+    },
+    pass: {
+      type: String,
+      required: [true, "Address Password is required"],
     },
 
     port: {
@@ -35,6 +39,15 @@ const imapConfigShema = new Schema(
     host: {
       type: String,
       required: [true, "Host is required"],
+    },
+    smtpPort: {
+      type: Number,
+      required: [true, "smtpPort is required"],
+      default: 587,
+    },
+    smtpHost: {
+      type: String,
+      required: [true, "smtpHost is required"],
     },
     secure: {
       type: Boolean,

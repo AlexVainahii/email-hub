@@ -19,6 +19,15 @@ const imapSchema = Joi.object({
   host: Joi.string()
     .required()
     .messages({ "any.required": "Host is required" }),
+  addressPass: Joi.string().required().messages({
+    "any.required": "Password is required",
+  }),
+  smtpPort: Joi.number()
+    .required()
+    .messages({ "any.required": "Port is required" }),
+  smtpHost: Joi.string()
+    .required()
+    .messages({ "any.required": "Host is required" }),
   secure: Joi.boolean()
     .required()
     .messages({ "any.required": "secure is required" }),

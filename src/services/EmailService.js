@@ -102,12 +102,12 @@ class EmailService {
   }
 
   async addMailBoxImap(obj, itemPerPage) {
-    const { email, pass } = obj;
+    const { email, pass, addressPass } = obj;
     const imapEmail = await ImapEmail.findOne({ email });
     helpers.CheckByError(imapEmail, 409, "Provided email already exists");
 
     const encryptedPassword = this.encrypt(pass);
-
+    const encryptedAddressPassword = this.encrypt(addressPass);
     let listboxes = [];
     try {
       listboxes = await this.getMailBoxes(
@@ -125,6 +125,7 @@ class EmailService {
     const mailBoxImap = await ImapEmail.create({
       ...obj,
       pass: encryptedPassword,
+      addressPass: encryptedAddressPassword,
       mailboxes: [...listboxes.listMailBox],
     });
 
