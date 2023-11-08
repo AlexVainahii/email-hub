@@ -439,7 +439,7 @@ class EmailService {
       from: imapEmail.email,
       to: recipient,
       subject,
-      text,
+      html: text,
     };
     console.log("mailOptions :>> ", {
       host: imapEmail.smtpHost,
