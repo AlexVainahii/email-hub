@@ -461,7 +461,7 @@ class EmailService {
     console.log("object :>> ");
     // move all messages to a mailbox called "Trash" (must exist)
     const result = await client.messageMove(mailList.join(","), toPath);
-    console.log("Moved %s messages", result.uidMap.size);
+    console.log("Moved %s messages", result);
     await client.logout();
     await client.close();
 
