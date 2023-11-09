@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger(formatsLogger));
 app.use(
   cors({
-    origin: "http://localhost:3000", // Дозволити запити з цього домену
+    origin: "*", // Дозволити запити з цього домену
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Дозволені HTTP-методи
     credentials: true, // Дозволити передавати кредити (наприклад, куки або токен)
   })

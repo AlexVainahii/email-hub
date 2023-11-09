@@ -213,6 +213,7 @@ class EmailService {
     const list = await client.search({ seen: false });
     const listMail = [];
     try {
+      console.log("status :>> ", status);
       for await (const message of client.fetch(
         uid === 0
           ? `${
@@ -223,6 +224,7 @@ class EmailService {
           : `${uid}:*`,
         { envelope: true }
       )) {
+        console.log("message :>> ", message);
         listMail.push({
           id: message.seq,
           from: message.envelope.from[0],
@@ -316,7 +318,7 @@ class EmailService {
       itemPerPage * 10,
       page
     );
-
+    console.log("listEmailObj :>> ", listEmailObj);
     await client.logout();
     await client.close();
     if (page === "1") {
