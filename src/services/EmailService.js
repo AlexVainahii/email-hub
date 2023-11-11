@@ -247,7 +247,6 @@ class EmailService {
 
   async deleteBoxImap(_id, userId) {
     const imapEmail = await ImapEmail.findById(_id);
-    console.log("imapEmail :>> ", imapEmail);
     helpers.CheckByError(
       imapEmail.owner._id.toString() !== userId.toString(),
       404
@@ -344,7 +343,6 @@ class EmailService {
   }
 
   async getMailOne({ id, path, uid }) {
-    console.log("_id :>> ", id);
     const imapModel = await ImapEmail.findById(id);
 
     const imapConfig = this.createImapConfig(imapModel);
@@ -373,9 +371,6 @@ class EmailService {
 
   async getEmailListSearch({ _id, path, search }) {
     const imapModel = await ImapEmail.findOne({ _id });
-
-    // const { itemPerPage } = await User.findById({ _id: imapModel.owner });
-
     helpers.CheckByError(!imapModel, 404, "Imap settings not found");
 
     const imapConfig = this.createImapConfig(imapModel);
@@ -393,7 +388,6 @@ class EmailService {
         { to: search },
       ],
     });
-
     const listMail = [];
     try {
       const list = await client.search({
@@ -417,7 +411,6 @@ class EmailService {
       // Make sure lock is released, otherwise next `getMailboxLock()` never returns
       lock.release();
     }
-
     await client.logout();
     await client.close();
 

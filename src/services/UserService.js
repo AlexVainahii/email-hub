@@ -114,10 +114,6 @@ class UserService {
     await sendEmail(verifyEmail);
   }
 
-  async updated(_id, updatedFields) {
-    await User.findByIdAndUpdate(_id, { $set: updatedFields });
-  }
-
   async verify(verificationToken) {
     const user = await User.findOne({ verificationToken });
 
@@ -144,6 +140,10 @@ class UserService {
     }
 
     return { email: user.email, token: token, verify: true };
+  }
+
+  async updated(_id, updatedFields) {
+    await User.findByIdAndUpdate(_id, { $set: updatedFields });
   }
 
   async sendGeneratePass(email) {
