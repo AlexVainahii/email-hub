@@ -1,12 +1,5 @@
 const { EmailService } = require("@services");
 const getEmailBox = async (req, res) => {
-  // const imapConfig = {
-  //   auth: { user: "vasilert@ukr.net", pass: "YHU1Iz2If0DVgoMt" },
-  //   host: "imap.ukr.net",
-  //   port: 993,
-  //   secure: true,
-  // };
-
   const imapConfig = {
     auth: { user: "sanjaksms@gmail.com", pass: "raidisperkjmnssw" },
     host: "imap.gmail.com",

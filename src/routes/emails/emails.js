@@ -21,7 +21,6 @@ router.get(
   middleW.authenticate,
   emailsCtrl.getEmailsFromSearch
 );
-router.get("/getBox", emailsCtrl.getEmailBox);
 router.get("/getMailOne/:id", middleW.authenticate, emailsCtrl.getMailOne);
 router.post(
   "/addBoxImap",
@@ -73,38 +72,5 @@ router.delete(
   middleW.authenticate,
   emailsCtrl.deleteBoxImap
 );
-// router.post(
-//   "/login",
-//   middleW.validateBody(schemas.loginSchema),
-//   usersCtrl.logIn
-// );
-
-// router.get("/current", middleW.authenticate, usersCtrl.getCurrent);
-
-// router.patch(
-//   "/user",
-//   middleW.authenticate,
-//   middleW.uploadAvatar.single("avatar"),
-//   middleW.validateUpdateBody(schemas.updateSchema),
-//   usersCtrl.updateUser
-// );
-
-// router.post("/logout", middleW.authenticate, usersCtrl.logOut);
-
-// router.get("/verify/:verificationToken", usersCtrl.verifyEmail);
-
-// router.get("/sendVerifyEmail", middleW.authenticate, usersCtrl.sendVerifyEmail);
-
-// router.post(
-//   "/sendRenewPass",
-//   middleW.validateBody(schemas.emailSchema),
-//   usersCtrl.sendRenewPassword
-// );
-// router.post(
-//   "/changePassword",
-//   middleW.authenticate,
-//   middleW.validateBody(schemas.passSchema),
-//   usersCtrl.changePassword
-// );
 
 module.exports = router;
