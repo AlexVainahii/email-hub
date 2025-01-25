@@ -21,7 +21,7 @@ const templateRenewPassEmail = (confirmationLink, userName, password) => {
 
         .email-container {
             width: 100%;
-            max-width: 600px;
+         
             margin: 0 auto;
             background-color: #7F56D9;
             border-radius: 8px;
@@ -128,7 +128,7 @@ const templateRenewPassEmail = (confirmationLink, userName, password) => {
 
         <!-- Main Content -->
         <main class="content">
-            <h1>Surprising Savings in Every Bag!</h1>
+            <h1 style="color: #FFFFFF">Surprising Savings in Every Bag!</h1>
 
             <div class="text-box">
                 <h4>Discover Fresh Surprise Bags and Save on Delicious Food!</h4>
