@@ -51,7 +51,7 @@ const templateRenewPassEmail = (confirmationLink, userName, password) => {
             padding: 40px;
             width: 80%;
             max-width: 1200px;
-            margin: 0 auto 40px;
+        margin: 40px auto 40px;
             background: #fafafa;
             color: #1d1d39;
             box-shadow: 0 8px 56px rgba(200, 208, 216, 0.08);
