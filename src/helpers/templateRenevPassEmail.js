@@ -58,6 +58,23 @@ const templateRenewPassEmail = (confirmationLink, userName, password) => {
             font-family: 'Manrope', sans-serif;
         }
 
+
+        text-box h1,
+    .text-box h2,
+    .text-box h3,
+    .text-box h4,
+    .text-box h5,
+    .text-box h6 {
+        margin: 0; /* Встановіть потрібний відступ */
+     margin-bottom: 32px  
+       
+    }
+ .text-box p{
+        margin: 0; /* Встановіть потрібний відступ */
+     margin-bottom: 24px
+
+    }
+
         .contentB {
             margin-bottom: 16px;
             font-family: 'Manrope', sans-serif;
